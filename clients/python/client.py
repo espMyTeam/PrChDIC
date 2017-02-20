@@ -1,6 +1,8 @@
 #! /usr/bin/python
 #-*- coding:utf-8 -*-
 
+import requests
+
 class ChatUser:
 	def __init__(self, pseudo):
 
@@ -14,4 +16,29 @@ class ChatUser:
 
 	def removeChatRoom(self):
 
+	def get(url):
+		try:
+			requests.get(url)
+		except:
+			print "erreur"
+
+	def post(self):
+		try:
+			requests.post(url)
+
+		except:
+
+	def put(self):
+		try:
+
+		except:
+
+	def delete(self):
+		try:
+
+		except:
+
+	
+	def update(self):
+		
 	
