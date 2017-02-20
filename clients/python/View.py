@@ -20,6 +20,7 @@ class ChatUserImpl(Tkinter.Tk):
 		fichier = Tkinter.Menu(menubar, tearoff=0)
 		fichier.add_command(label="Statut")
 		fichier.add_command(label="Profil")
+		fichier.add_command(label="Démarrer une nouvelle conversation")
 		fichier.add_command(label="Deconnexion")
 		fichier.add_command(label="Quitter", command=self.quit)
 		menubar.add_cascade(label="Fichier", menu=fichier)
@@ -43,6 +44,24 @@ class ChatUserImpl(Tkinter.Tk):
 		menubar.add_cascade(label="Aide", menu=aide)
 
 		self.config(menu=menubar)
+
+
+	def NouvelleSalon(self):
+		""" creation de nouvelle salon"""
+
+	def ListeSalons(self):
+		"""liste de toutes les salons dont l'utilisateur fait parties"""
+
+	def demarrerConversation(self):
+		"""demarrer une nouvelle conversation"""
+		pannelUsers = Frame()
+		pannelMessages = Frame()
+		pannelSaisieMessage = Frame()
+
+	
+
+
+
 
 		
 

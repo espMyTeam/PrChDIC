@@ -51,7 +51,7 @@ public class AiguilleurResource {
            String uriMachine = (String) it.next();
            this.webTarget = this.client.target(uriMachine); 
            
-           listChatRoom+=this.webTarget.request(MediaType.TEXT_PLAIN).get(String.class);
+           listChatRoom += this.webTarget.request(MediaType.TEXT_PLAIN).get(String.class);
         }
         // attention a l'exploitation de la liste
         return listChatRoom;
