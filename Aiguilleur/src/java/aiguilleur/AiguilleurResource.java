@@ -3,6 +3,7 @@ package aiguilleur;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Consumes;
@@ -10,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PUT;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import static javax.ws.rs.client.Entity.entity;
@@ -21,6 +23,7 @@ import javax.ws.rs.core.MediaType;
  *
  * @author asus
  */
+@Singleton
 @Path("Aiguilleur")
 public class AiguilleurResource {
 
@@ -30,7 +33,7 @@ public class AiguilleurResource {
     private Client client;
     private static int indice = 0;
     private ArrayList<String> machines;
-    private ArrayList<User> users;
+    private HashMap<String,String> users;
     private HashMap<String,Integer> dns;
     
     
@@ -38,7 +41,10 @@ public class AiguilleurResource {
      * Creates a new instance of AiguilleurResource
      */
     public AiguilleurResource() {
-        machines = new ArrayList();
+        this.machines = new ArrayList();
+        this.machines.add("http://localhost:8080/MachinesChatRoom/one/machineOne");
+        this.users = new HashMap();
+        this.dns = new HashMap();
     }
 
     @GET
@@ -51,7 +57,7 @@ public class AiguilleurResource {
            String uriMachine = (String) it.next();
            this.webTarget = this.client.target(uriMachine); 
            
-           listChatRoom += this.webTarget.request(MediaType.TEXT_PLAIN).get(String.class);
+           listChatRoom+=this.webTarget.request(MediaType.TEXT_PLAIN).get(String.class);
         }
         // attention a l'exploitation de la liste
         return listChatRoom;
@@ -62,16 +68,15 @@ public class AiguilleurResource {
     public void putText(String content) {
     }
     
-    @PUT @Path("create")
+    @PUT @Path("create/{idChatRoom}")
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.TEXT_PLAIN)
-    public String createChatRoom(String idChatRoom, String proprio){
+    public String createChatRoom(@PathParam("idChatRoom") String idChatRoom, String proprio){
         int x = roundRobin();
         String uriMachine = machines.get(x);
         this.client = ClientBuilder.newClient();
-        this.webTarget = this.client.target(uriMachine).path("create");
-        //comment ajouter deux parametres pour consommer le service
-        String resultat =  this.webTarget.request(MediaType.TEXT_PLAIN).put(entity, responseType);
+        this.webTarget = this.client.target(uriMachine).path("create").path("{idChatRoom}").resolveTemplate("idChatRoom", idChatRoom);
+        String resultat =  this.webTarget.request(MediaType.TEXT_PLAIN).put(entity(proprio,MediaType.TEXT_PLAIN), String.class);
         
         if (resultat.equals("Succes : Chatroom cree")){
             dns.put(idChatRoom, x);
@@ -80,97 +85,81 @@ public class AiguilleurResource {
         else return resultat;
     }
     
-    @PUT @Path("delete")
+    @PUT @Path("delete/{idChatRoom}")
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.TEXT_PLAIN)
-    public String deleteChatRoom(String idChatRoom, String proprio){
+    public String deleteChatRoom(@PathParam("idChatRoom")String idChatRoom, String proprio){
         this.client = ClientBuilder.newClient();
         int indiceMachine = dns.get(idChatRoom);
         String uriMachine = machines.get(indiceMachine);
-        this.webTarget = this.client.target(uriMachine).path("delete");
-        
-        //comment ajouter deux parametres pour consommer le service
-        return this.webTarget.request(MediaType.TEXT_PLAIN).put(entity, responseType);
+        this.webTarget = this.client.target(uriMachine).path("delete").path("{idChatRoom}").resolveTemplate("idChatRoom", idChatRoom);
+        return this.webTarget.request(MediaType.TEXT_PLAIN).put(entity(proprio,MediaType.TEXT_PLAIN), String.class);
     }
     
-    @PUT @Path("register")
+    @PUT @Path("register/{pseudo}")
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.TEXT_PLAIN)
-    public String registerChatRoom(String pseudo, String uriClient){
+    public String registerChatRoom(@PathParam("pseudo")String pseudo, String uriClient){
         String result;
-        Boolean trouve = false;
-        Iterator it = users.iterator();
-        while(it.hasNext()){
-            User res = (User) it.next();
-            if(res.getPseudo().equals(pseudo)) {
-                trouve = true;
-                break;
-            }
-        }
-        if (trouve) result = "Erreur : pseudo existe deja";
+        if(this.users.containsKey(pseudo)) 
+            result = "Erreur : pseudo existe deja";
         else {
-            users.add(new User(pseudo,uriClient));
+            users.put(pseudo,uriClient);
             result = "Succes : pseudo enregistre";
         }
         
         return result;
         
     }
-    @PUT @Path("unregister")
-    @Produces(MediaType.TEXT_PLAIN)
+    @PUT @Path("unregister/{pseudo}")
     @Consumes(MediaType.TEXT_PLAIN)
-    public void unregisterChatRoom(String pseudo){
-        Iterator it = users.iterator();
-        while(it.hasNext()){
-            User res = (User) it.next();
-            if(res.getPseudo().equals(pseudo)) {
-                users.remove(res);
-                break;
-            }
-        }
+    public void unregisterChatRoom(@PathParam("pseudo") String pseudo){
+        this.users.remove(pseudo);
 
     }
     
-    @PUT @Path("subscribe")
+    @PUT @Path("subscribe/{idChatRoom}")
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.TEXT_PLAIN)
-    public String subscribeChatRoom(String idChatRoom, String pseudo){
+    public String subscribeChatRoom(@PathParam("idChatRoom") String idChatRoom, String pseudo){
         this.client = ClientBuilder.newClient();
         int indiceMachine = dns.get(idChatRoom);
         String uriMachine = machines.get(indiceMachine);
-        this.webTarget = this.client.target(uriMachine).path("subscribe");
-        
-        //comment ajouter deux parametres pour consommer le service
-        return this.webTarget.request(MediaType.TEXT_PLAIN).put(entity, responseType);
+        this.webTarget = this.client.target(uriMachine).path("subscribe").path("{idChatRoom}").resolveTemplate("idChatRoom", idChatRoom);
+        return this.webTarget.request(MediaType.TEXT_PLAIN).put(entity(pseudo,MediaType.TEXT_PLAIN), String.class);
     }
     
-    @PUT @Path("unsubscribe")
+    @PUT @Path("unsubscribe/{idChatRoom}")
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.TEXT_PLAIN)
-    public String unsubscribeChatRoom(String idChatRoom, String pseudo){
+    public String unsubscribeChatRoom(@PathParam("idChatRoom") String idChatRoom, String pseudo){
         this.client = ClientBuilder.newClient();
         int indiceMachine = dns.get(idChatRoom);
         String uriMachine = machines.get(indiceMachine);
-        this.webTarget = this.client.target(uriMachine).path("unsubscribe");
-        
-        //comment ajouter deux parametres pour consommer le service
-        return this.webTarget.request(MediaType.TEXT_PLAIN).put(entity, responseType);
+        this.webTarget = this.client.target(uriMachine).path("unsubscribe").path("{idChatRoom}").resolveTemplate("idChatRoom", idChatRoom);
+        return this.webTarget.request(MediaType.TEXT_PLAIN).put(entity(pseudo,MediaType.TEXT_PLAIN), String.class);
     }
     
-    @PUT @Path("postMessage")
+    @PUT @Path("postMessage/{idChatRoom}")
     @Consumes(MediaType.TEXT_PLAIN)
-    public void postMessage(String idChatRoom, String msg){
+    public void postMessage(@PathParam("idChatRoom")String idChatRoom, String msg){
        this.client = ClientBuilder.newClient();
         int indiceMachine = dns.get(idChatRoom);
         String uriMachine = machines.get(indiceMachine);
-        this.webTarget = this.client.target(uriMachine).path("postMessage");
-        
+        this.webTarget = this.client.target(uriMachine).path("postMessage");      
         String listUsers =  this.webTarget.request(MediaType.TEXT_PLAIN).put(entity(idChatRoom,MediaType.TEXT_PLAIN),String.class);
         broadcastMessage(listUsers);
     }
     
     private void broadcastMessage(String listUsers) {
-        // la fonction concomme le service displayMessage de chaque user
+        String first = listUsers.split("[")[0];
+        String second = first.split("]")[0];
+        String[] pseudos = second.split(",");
+        for (int i=0;i<pseudos.length;i++){
+            String clientURI = this.users.get(pseudos[i]);
+            // la fonction concomme le service displayMessage de chaque user
+        }
+        
     }
     
     public int roundRobin(){
