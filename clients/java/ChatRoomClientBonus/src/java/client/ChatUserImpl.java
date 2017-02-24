@@ -286,7 +286,7 @@ public class ChatUserImpl {
         this.txtOutput.setBackground(Color.cyan);
         this.txtOutput.setForeground(Color.blue);
         this.txtOutput.setFont(new Font("Monospaced",1,15));
-	this.txtOutput.setEditable(false);
+	    this.txtOutput.setEditable(false);
         this.txtOutput.setLineWrap(true);
         this.txtOutput.setWrapStyleWord(true);
         this.window.setSize(500,500);
