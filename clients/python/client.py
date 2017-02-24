@@ -2,6 +2,7 @@
 #-*- coding:utf-8 -*-
 
 import requests
+import sseclient
 
 class ChatUser:
 	def __init__(self, pseudo):
